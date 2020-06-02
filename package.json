@@ -1,19 +1,47 @@
 {
-  "name": "molgenis-js-catalogue-exporter",
-  "version": "1.0.0",
-  "description": "Service to export the MOLGENIS catalogue model to EMX",
-  "main": "export.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [
-    "catalogue",
-    "export"
-  ],
-  "author": "Sido Haakma, Fleur Kelpin",
+  "version": "0.1.0",
   "license": "LGPL-3.0",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "start": "tsdx watch",
+    "build": "tsdx build",
+    "test": "tsdx test",
+    "lint": "tsdx lint",
+    "prepare": "tsdx build"
+  },
+  "peerDependencies": {},
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsdx lint"
+    }
+  },
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "name": "molgenis-js-catalogue-exporter",
+  "author": "Fleur Kelpin",
+  "module": "dist/molgenis-js-catalogue-exporter.esm.js",
+  "devDependencies": {
+    "@types/lodash.groupby": "^4.6.6",
+    "husky": "^4.2.5",
+    "tsdx": "^0.13.2",
+    "tslib": "^2.0.0",
+    "typescript": "^3.9.3"
+  },
   "dependencies": {
-    "csv-formatter": "^1.1.0",
+    "@types/jszip": "^3.4.1",
+    "@types/node-fetch": "^2.5.7",
     "csv-stringify": "^5.5.0",
     "jszip": "^3.4.0",
     "lodash.groupby": "^4.6.0",
