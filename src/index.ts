@@ -43,14 +43,14 @@ interface Attribute {
   description?: string
   dataType: MolgenisDataType
   entity: string
-  idAttribute?: "TRUE" | "FALSE" | "AUTO"
-  labelAttribute?: "TRUE" | "FALSE"
+  idAttribute?: 'TRUE' | 'FALSE' | 'AUTO'
+  labelAttribute?: 'TRUE' | 'FALSE'
   rangeMin?: number
   rangeMax?: number
   refEntity?: string
 }
 
-const fetchData = async (firstUrl: string) => {
+const fetchData = async (firstUrl: string): Promise<Variable[]> => {
   let result: Variable[] = []
   let url = firstUrl
   while (url) {
@@ -72,7 +72,7 @@ export const exportData = async (firstUrl: string): Promise<JSZip> => {
     },
     {
       name: 'id',
-      dataType:  MolgenisDataType.STRING,
+      dataType: MolgenisDataType.STRING,
       entity: TABLE_TRIMESTER_REPEATED,
       idAttribute: 'AUTO'
     },
@@ -126,14 +126,17 @@ export const exportData = async (firstUrl: string): Promise<JSZip> => {
     }
   ]
   const variables = await fetchData(firstUrl)
-  const uniqueVariables = groupBy(variables, (item) => item.variable && attributeNameOfVariable(item.variable))
+  const uniqueVariables = groupBy(
+    variables,
+    item => item.variable && attributeNameOfVariable(item.variable)
+  )
   const variableKeys = Object.keys(uniqueVariables)
   const emxModel: JSZip = new JSZip()
 
   for (let i = 0; i < variableKeys.length; i++) {
-    let key = variableKeys[i]
-    let variable = uniqueVariables[key][0]
-    let tableName = createTableName(uniqueVariables[key].length)
+    const key = variableKeys[i]
+    const variable = uniqueVariables[key][0]
+    const tableName = createTableName(uniqueVariables[key].length)
 
     switch (variable.datatype.id) {
       case CatalogueDatatype.CATEGORICAL:
@@ -149,7 +152,7 @@ export const exportData = async (firstUrl: string): Promise<JSZip> => {
         doBasic(tableName, attributes, key, variable, MolgenisDataType.DECIMAL)
         break
       default:
-        console.log("Unknown datatype:", variable.datatype.id, key)
+        console.log('Unknown datatype:', variable.datatype.id, key)
     }
   }
 
@@ -169,20 +172,31 @@ const createTableName = (repeatCount: number) => {
   return tableName
 }
 
-const doBasic = async (tableName: string, attributes: Attribute[], key: string, variable: Variable, dataType: MolgenisDataType) =>
-  attributes.push(
-    {
-      name: key,
-      dataType,
-      description: variable.label,
-      entity: tableName
-    })
+const doBasic = async (
+  tableName: string,
+  attributes: Attribute[],
+  key: string,
+  variable: Variable,
+  dataType: MolgenisDataType
+) =>
+  attributes.push({
+    name: key,
+    dataType,
+    description: variable.label,
+    entity: tableName
+  })
 
-const doCategorical = async (tableName: string, attributes: Attribute[], key: string, variable: Variable, emxModel: JSZip) => {
+const doCategorical = async (
+  tableName: string,
+  attributes: Attribute[],
+  key: string,
+  variable: Variable,
+  emxModel: JSZip
+) => {
   const values = variable.values
   const description = variable.label
   if (!values) {
-    console.error("Missing values for categorical variable", key)
+    console.error('Missing values for categorical variable', key)
     return
   }
   const options = getCategoricalOptions(values)
@@ -205,17 +219,30 @@ const doCategorical = async (tableName: string, attributes: Attribute[], key: st
       dataType: MolgenisDataType.STRING,
       entity: `${key}_options`,
       labelAttribute: 'TRUE'
-    })
+    }
+  )
   await writeOptionsCsv(emxModel, options, `${key}_options.csv`)
 }
 
 const writeAttributesCsv = async (emxModel: JSZip, attributes: Attribute[]) => {
   return new Promise((resolve, reject) => {
-    stringify(attributes,
+    stringify(
+      attributes,
       {
         header: true,
-        columns: ['entity', 'name', 'description', 'dataType', 'labelAttribute', 'idAttribute', 'refEntity', 'rangeMin', 'rangeMax']
-      }, function (err, data) {
+        columns: [
+          'entity',
+          'name',
+          'description',
+          'dataType',
+          'labelAttribute',
+          'idAttribute',
+          'refEntity',
+          'rangeMin',
+          'rangeMax'
+        ]
+      },
+      function (err, data) {
         if (err) {
           reject(err)
         }
@@ -223,18 +250,27 @@ const writeAttributesCsv = async (emxModel: JSZip, attributes: Attribute[]) => {
           emxModel.file('attributes.csv', data)
           resolve()
         }
-      })
+      }
+    )
   })
 }
 
-
-const writeOptionsCsv = async (emxModel: JSZip, options: Option[], fileName: string) => {
+const writeOptionsCsv = async (
+  emxModel: JSZip,
+  options: Option[],
+  fileName: string
+) => {
   return new Promise((resolve, reject) => {
-    stringify(options,
+    stringify(
+      options,
       {
         header: true,
-        columns: [{ key: 'key', header: 'id' }, { key: 'value', header: 'label' }]
-      }, function (err, data) {
+        columns: [
+          { key: 'key', header: 'id' },
+          { key: 'value', header: 'label' }
+        ]
+      },
+      function (err, data) {
         if (err) {
           reject(err)
         }
@@ -242,26 +278,27 @@ const writeOptionsCsv = async (emxModel: JSZip, options: Option[], fileName: str
           emxModel.file(fileName, data)
           resolve()
         }
-      })
+      }
+    )
   })
 }
 
 const getCategoricalOptions = (values: string) => {
-  let seperator = '\n'
-  if (values.indexOf(seperator) == -1) {
-    seperator = ','
+  let separator = '\n'
+  if (values.indexOf(separator) === -1) {
+    separator = ','
   }
-  const options = values.split(seperator).map(value => value.trim())
+  const options = values.split(separator).map(value => value.trim())
 
   const matches = /[^\d\s]/.exec(options[0])
   if (!matches) {
-    throw new Error("separator not found")
+    throw new Error('separator not found')
   }
-  const optionSeperator = matches[0]
+  const optionSeparator = matches[0]
 
   return options.map(option => ({
-    key: option.substring(0, option.indexOf(optionSeperator)).trim(),
-    value: option.substring(option.indexOf(optionSeperator) + 1).trim()
+    key: option.substring(0, option.indexOf(optionSeparator)).trim(),
+    value: option.substring(option.indexOf(optionSeparator) + 1).trim()
   }))
 }
 
