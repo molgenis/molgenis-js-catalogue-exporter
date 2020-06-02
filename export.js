@@ -1,5 +1,5 @@
 const fetch = require('node-fetch')
-const _ = require('lodash')
+const groupBy = require('lodash.groupby')
 const stringify = require('csv-stringify')
 const JSZip = require("jszip")
 const fs = require('fs')
@@ -9,8 +9,19 @@ const TABLE_TRIMESTER_REPEATED = 'trimester_repeated'
 const TABLE_MONTHLY_REPEATED = 'monthly_repeated'
 const TABLE_YEARLY_REPEATED = 'yearly_repeated'
 
-// categoricals
-fetchData = async () => {
+const fetchData = async () => {
+  let result = []
+  let url = 'https://molgenis36.gcc.rug.nl/api/v2/LifeCycle_CoreVariables?attrs=variable,label,datatype,values&num=10000'
+  while (url) {
+    const response = await fetch(url)
+    const jsonResponse = await response.json()
+    result = [...result, ...jsonResponse.items]
+    url = jsonResponse.nextHref
+  }
+  return result
+}
+
+const exportData = async () => {
   const attributes = [
     {
       name: 'child_id',
@@ -73,32 +84,38 @@ fetchData = async () => {
       rangeMax: '17'
     }
   ]
-  const response = await fetch('https://molgenis36.gcc.rug.nl/api/v2/LifeCycle_CoreVariables?attrs=variable,label,datatype,values&num=10000')
-  const jsonResponse = await response.json()
-  const uniqueVariables = _.groupBy(jsonResponse.items, (item) => item.variable && attributeNameOfVariable(item.variable))
+  const variables = await fetchData()
+  const uniqueVariables = groupBy(variables, (item) => item.variable && attributeNameOfVariable(item.variable))
   const variableKeys = Object.keys(uniqueVariables)
   const emxModel = new JSZip()
-  
+
   for (let i = 0; i < variableKeys.length; i++) {
-    let key = variableKeys[i]  
+    let key = variableKeys[i]
     let variable = uniqueVariables[key][0]
     let tableName = createTableName(uniqueVariables[key].length)
 
-    switch (variable.datatype) {
+    switch (variable.datatype.id) {
       case 'categorical':
         doCategorical(tableName, attributes, key, variable, emxModel)
+        break
+      case 'int':
+        doBasic(tableName, attributes, key, variable, 'int')
+        break
+      case 'binary':
+        doBasic(tableName, attributes, key, variable, 'bool')
+        break
+      case 'continuous':
+        doBasic(tableName, attributes, key, variable, 'decimal')
+        break
+      default:
+        console.log("Unknown datatype:", variable.datatype.id, key)
     }
-
-
-    
   }
 
   await writeAttributesCsv(emxModel, attributes)
   emxModel.generateNodeStream({ type: 'nodebuffer', streamFiles: true })
     .pipe(fs.createWriteStream('model.zip'))
 }
-
-data = fetchData()
 
 const createTableName = (repeatCount) => {
   let tableName = TABLE_NON_REPEATED
@@ -112,9 +129,18 @@ const createTableName = (repeatCount) => {
   return tableName
 }
 
+const doBasic = async (tableName, attributes, key, variable, dataType) =>
+  attributes.push(
+    {
+      name: key,
+      dataType,
+      description: variable.label,
+      entity: tableName
+    })
+
 const doCategorical = async (tableName, attributes, key, variable, emxModel) => {
   const values = variable.values
-  const description = variables.label
+  const description = variable.label
   const options = getCategoricalOptions(values)
   attributes.push(
     {
@@ -122,7 +148,6 @@ const doCategorical = async (tableName, attributes, key, variable, emxModel) => 
       dataType: 'categorical',
       description,
       entity: tableName,
-      idAttribute: 'FALSE',
       refEntity: `${key}_options`
     },
     {
@@ -135,7 +160,6 @@ const doCategorical = async (tableName, attributes, key, variable, emxModel) => 
       name: 'label',
       dataType: 'string',
       entity: `${key}_options`,
-      idAttribute: 'FALSE',
       labelAttribute: 'TRUE'
     })
   await writeOptionsCsv(emxModel, options, `${key}_options.csv`)
@@ -199,3 +223,5 @@ const attributeNameOfVariable = (variable) => {
     return variable
   }
 }
+
+exportData()
