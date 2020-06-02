@@ -130,13 +130,11 @@ export const exportData = async (firstUrl: string): Promise<JSZip> => {
     variables,
     item => item.variable && attributeNameOfVariable(item.variable)
   )
-  const variableKeys = Object.keys(uniqueVariables)
   const emxModel: JSZip = new JSZip()
 
-  for (let i = 0; i < variableKeys.length; i++) {
-    const key = variableKeys[i]
-    const variable = uniqueVariables[key][0]
-    const tableName = createTableName(uniqueVariables[key].length)
+  for (let [key, variables] of Object.entries(uniqueVariables)) {
+    const variable = variables[0]
+    const tableName = createTableName(variables.length)
 
     switch (variable.datatype.id) {
       case CatalogueDatatype.CATEGORICAL:
@@ -148,7 +146,7 @@ export const exportData = async (firstUrl: string): Promise<JSZip> => {
       case CatalogueDatatype.BINARY:
         doBasic(tableName, attributes, key, variable, MolgenisDataType.BOOLEAN)
         break
-      case 'continuous':
+      case CatalogueDatatype.CONTINUOUS:
         doBasic(tableName, attributes, key, variable, MolgenisDataType.DECIMAL)
         break
       default:
