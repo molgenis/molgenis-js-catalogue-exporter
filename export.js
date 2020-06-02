@@ -73,40 +73,24 @@ fetchData = async () => {
       rangeMax: '17'
     }
   ]
-  const response = await fetch('https://molgenis36.gcc.rug.nl/api/v2/LifeCycle_CoreVariables?q=datatype==categorical&num=10000')
-  const categoricals = await response.json()
-  const uniqueVariables = _.groupBy(categoricals.items, (categorical) => categorical.variable && attributeNameOfVariable(categorical.variable))
+  const response = await fetch('https://molgenis36.gcc.rug.nl/api/v2/LifeCycle_CoreVariables?attrs=variable,label,datatype,values&num=10000')
+  const jsonResponse = await response.json()
+  const uniqueVariables = _.groupBy(jsonResponse.items, (item) => item.variable && attributeNameOfVariable(item.variable))
   const variableKeys = Object.keys(uniqueVariables)
   const emxModel = new JSZip()
+  
   for (let i = 0; i < variableKeys.length; i++) {
-    let key = variableKeys[i]
-    let values = uniqueVariables[key][0].values
-    let description = uniqueVariables[key][0].label
+    let key = variableKeys[i]  
+    let variable = uniqueVariables[key][0]
     let tableName = createTableName(uniqueVariables[key].length)
-    let options = getCategoricalOptions(values)
-    attributes.push(
-      {
-        name: key,
-        dataType: 'categorical',
-        description,
-        entity: tableName,
-        idAttribute: 'FALSE',
-        refEntity: `${key}_options`
-      },
-      {
-        name: 'id',
-        dataType: 'string',
-        entity: `${key}_options`,
-        idAttribute: 'TRUE'
-      },
-      {
-        name: 'label',
-        dataType: 'string',
-        entity: `${key}_options`,
-        idAttribute: 'FALSE',
-        labelAttribute: 'TRUE'
-      })
-    await writeOptionsCsv(emxModel, options, `${key}_options.csv`)
+
+    switch (variable.datatype) {
+      case 'categorical':
+        doCategorical(tableName, attributes, key, variable, emxModel)
+    }
+
+
+    
   }
 
   await writeAttributesCsv(emxModel, attributes)
@@ -126,6 +110,35 @@ const createTableName = (repeatCount) => {
     tableName = TABLE_TRIMESTER_REPEATED
   }
   return tableName
+}
+
+const doCategorical = async (tableName, attributes, key, variable, emxModel) => {
+  const values = variable.values
+  const description = variables.label
+  const options = getCategoricalOptions(values)
+  attributes.push(
+    {
+      name: key,
+      dataType: 'categorical',
+      description,
+      entity: tableName,
+      idAttribute: 'FALSE',
+      refEntity: `${key}_options`
+    },
+    {
+      name: 'id',
+      dataType: 'string',
+      entity: `${key}_options`,
+      idAttribute: 'TRUE'
+    },
+    {
+      name: 'label',
+      dataType: 'string',
+      entity: `${key}_options`,
+      idAttribute: 'FALSE',
+      labelAttribute: 'TRUE'
+    })
+  await writeOptionsCsv(emxModel, options, `${key}_options.csv`)
 }
 
 const writeAttributesCsv = async (emxModel, attributes) => {
