@@ -1,0 +1,22 @@
+{
+  "name": "molgenis-js-catalogue-exporter",
+  "version": "1.0.0",
+  "description": "Service to export the MOLGENIS catalogue model to EMX",
+  "main": "export.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "catalogue",
+    "export"
+  ],
+  "author": "Sido Haakma, Fleur Kelpin",
+  "license": "LGPL-3.0",
+  "dependencies": {
+    "csv-formatter": "^1.1.0",
+    "csv-stringify": "^5.5.0",
+    "jszip": "^3.4.0",
+    "lodash": "^4.17.15",
+    "node-fetch": "^2.6.0"
+  }
+}
