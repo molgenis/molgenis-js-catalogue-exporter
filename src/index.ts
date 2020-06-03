@@ -132,7 +132,8 @@ export const exportData = async (firstUrl: string): Promise<JSZip> => {
   )
   const emxModel: JSZip = new JSZip()
 
-  for (let [key, variables] of Object.entries(uniqueVariables)) {
+  // @ts-ignore
+  for (const [key, variables] of Object.entries(uniqueVariables)) {
     const variable = variables[0]
     const tableName = createTableName(variables.length)
 
