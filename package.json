@@ -1,5 +1,5 @@
 {
-  "name": "molgenis-js-catalogue-exporter",
+  "name": "@molgenis/molgenis-js-catalogue-exporter",
   "version": "1.0.0",
   "description": "Service to export the MOLGENIS catalogue model to EMX",
   "main": "export.js",
@@ -12,11 +12,31 @@
   ],
   "author": "Sido Haakma, Fleur Kelpin",
   "license": "LGPL-3.0",
+  "repository": "https://github.com/molgenis/molgenis-js-catalogue-exporter",
   "dependencies": {
-    "csv-formatter": "^1.1.0",
     "csv-stringify": "^5.5.0",
     "jszip": "^3.4.0",
     "lodash": "^4.17.15",
     "node-fetch": "^2.6.0"
+  },
+  "release": {
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      [
+        "@semantic-release/changelog",
+        {
+          "changelogFile": "CHANGELOG.md"
+        }
+      ],
+      "@semantic-release/git",
+      "@semantic-release/github",
+      "@semantic-release/npm"
+    ]
+  },
+  "devDependencies": {
+    "@semantic-release/changelog": "^5.0.1",
+    "@semantic-release/git": "^9.0.0",
+    "semantic-release": "^17.0.8"
   }
 }
