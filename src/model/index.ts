@@ -15,7 +15,7 @@ export enum CatalogueDatatype {
 }
 
 export interface Option {
-  id: string
+  id: number
   label: string
 }
 

@@ -198,7 +198,10 @@ const getCategoricalOptions = (variable: Variable): Option[] => {
   const optionSeparator = matches[0]
 
   return options.map(option => ({
-    id: option.substring(0, option.indexOf(optionSeparator)).trim(),
+    id: parseInt(
+      option.substring(0, option.indexOf(optionSeparator)).trim(),
+      10
+    ),
     label: option.substring(option.indexOf(optionSeparator) + 1).trim()
   }))
 }
