@@ -4,8 +4,9 @@ import groupBy from 'lodash.groupby'
 
 const TABLE_NON_REPEATED = 'non_repeated'
 const TABLE_TRIMESTER_REPEATED = 'trimester_repeated'
-const TABLE_MONTHLY_REPEATED = 'monthly_repeated'
 const TABLE_YEARLY_REPEATED = 'yearly_repeated'
+const TABLE_WEEKLY_REPEATED = 'weekly_repeated'
+const TABLE_MONTHLY_REPEATED = 'monthly_repeated'
 
 export const getEmx = (variables: Variable[]): Emx => {
   const uniqueVariables: Dictionary<Variable[]> = groupBy(
@@ -168,10 +169,12 @@ export const getTablename = (repeatCount: number) => {
   let tableName = TABLE_NON_REPEATED
   if (repeatCount > 100) {
     tableName = TABLE_MONTHLY_REPEATED
-  } else if (repeatCount > 20) {
-    tableName = TABLE_TRIMESTER_REPEATED
-  } else if (repeatCount > 1) {
+  } else if (repeatCount > 30) {
+    tableName = TABLE_WEEKLY_REPEATED
+  } else if (repeatCount > 3) {
     tableName = TABLE_YEARLY_REPEATED
+  } else if (repeatCount > 1) {
+    tableName = TABLE_TRIMESTER_REPEATED
   }
   return tableName
 }

@@ -6,16 +6,16 @@ describe('getTablename', () => {
     expect(getTablename(1)).toBe('non_repeated')
   })
 
-  it('returns yearly_repeated for variable repeated twice', () => {
-    expect(getTablename(2)).toBe('yearly_repeated')
+  it('returns trimester_repeated for variable repeated thrice', () => {
+    expect(getTablename(3)).toBe('trimester_repeated')
   })
 
   it('returns yearly_repeated for variable repeated 17 times', () => {
     expect(getTablename(17)).toBe('yearly_repeated')
   })
 
-  it('returns trimester_repeated for variable repeated 43 times', () => {
-    expect(getTablename(43)).toBe('trimester_repeated')
+  it('returns weekly_repeated for variable repeated 43 times', () => {
+    expect(getTablename(43)).toBe('weekly_repeated')
   })
 
   it('returns monthly_repeated for variable repeated 216 times', () => {
@@ -151,7 +151,7 @@ describe('emx', () => {
     expect(emx.attributes).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          entity: 'yearly_repeated',
+          entity: 'trimester_repeated',
           name: 'name',
           refEntity: 'name_options'
         }),
