@@ -102,6 +102,18 @@ describe('emx', () => {
     )
   })
 
+  it('only creates options data sheets for categoricals', () => {
+    const emx = getEmx([
+      {
+        variable: 'name',
+        datatype: { id: CatalogueDatatype.INTEGER },
+        label: 'label'
+      }
+    ])
+
+    expect(emx.data.name_options).not.toBeDefined()
+  })
+
   it('creates options data sheet', () => {
     const emx = getEmx([
       {

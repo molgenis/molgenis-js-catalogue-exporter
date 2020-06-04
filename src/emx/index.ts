@@ -15,10 +15,15 @@ export const getEmx = (variables: Variable[]): Emx => {
   return {
     attributes: getAttributes(Object.values(uniqueVariables)),
     data: Object.fromEntries(
-      Object.entries(uniqueVariables).map(([key, values]) => [
-        `${key}_options`,
-        getCategoricalOptions(values[0])
-      ])
+      Object.entries(uniqueVariables)
+        .filter(
+          ([_, values]) =>
+            values[0].datatype.id === CatalogueDatatype.CATEGORICAL
+        )
+        .map(([key, values]) => [
+          `${key}_options`,
+          getCategoricalOptions(values[0])
+        ])
     )
   }
 }
