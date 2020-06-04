@@ -159,14 +159,14 @@ const getOptionTableAttributes = (entity: string): Attribute[] => [
   }
 ]
 
-const getTablename = (repeatCount: number) => {
+export const getTablename = (repeatCount: number) => {
   let tableName = TABLE_NON_REPEATED
   if (repeatCount > 100) {
     tableName = TABLE_MONTHLY_REPEATED
-  } else if (repeatCount > 3) {
-    tableName = TABLE_YEARLY_REPEATED
-  } else if (repeatCount > 1) {
+  } else if (repeatCount > 20) {
     tableName = TABLE_TRIMESTER_REPEATED
+  } else if (repeatCount > 1) {
+    tableName = TABLE_YEARLY_REPEATED
   }
   return tableName
 }

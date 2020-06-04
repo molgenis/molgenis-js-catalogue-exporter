@@ -1,5 +1,27 @@
-import { getEmx } from '../src/emx'
+import { getEmx, getTablename } from '../src/emx'
 import { CatalogueDatatype, MolgenisDataType } from '../src/model'
+
+describe('getTablename', () => {
+  it('returns non_repeated for non-repeated variable', () => {
+    expect(getTablename(1)).toBe('non_repeated')
+  })
+
+  it('returns yearly_repeated for variable repeated twice', () => {
+    expect(getTablename(2)).toBe('yearly_repeated')
+  })
+
+  it('returns yearly_repeated for variable repeated 17 times', () => {
+    expect(getTablename(17)).toBe('yearly_repeated')
+  })
+
+  it('returns trimester_repeated for variable repeated 43 times', () => {
+    expect(getTablename(43)).toBe('trimester_repeated')
+  })
+
+  it('returns monthly_repeated for variable repeated 216 times', () => {
+    expect(getTablename(216)).toBe('monthly_repeated')
+  })
+})
 
 describe('emx', () => {
   it('transforms binary datatype to boolean', () => {
@@ -117,7 +139,7 @@ describe('emx', () => {
     expect(emx.attributes).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          entity: 'trimester_repeated',
+          entity: 'yearly_repeated',
           name: 'name',
           refEntity: 'name_options'
         }),
