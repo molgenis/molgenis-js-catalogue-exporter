@@ -1,3 +1,16 @@
+# [1.1.0](https://github.com/molgenis/molgenis-js-catalogue-exporter/compare/v1.0.0...v1.1.0) (2020-06-09)
+
+
+### Bug Fixes
+
+* only create options for categoricals ([0eceeb1](https://github.com/molgenis/molgenis-js-catalogue-exporter/commit/0eceeb11ed5782215c7744bedf6c24e3d888dfb8))
+* switch yearly and trimester table names ([dc1948a](https://github.com/molgenis/molgenis-js-catalogue-exporter/commit/dc1948a52429ad0c4dbadbb251cf599de380b2db))
+
+
+### Features
+
+* added weekly table ([e6def85](https://github.com/molgenis/molgenis-js-catalogue-exporter/commit/e6def85e1c8b6db868fa912c8411be8533c47254))
+
 # 1.0.0 (2020-06-04)
 
 
