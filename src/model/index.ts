@@ -20,6 +20,7 @@ export interface Option {
 }
 
 export interface Variable {
+  tablename?: string
   variable: string
   label: string
   datatype: {
@@ -47,4 +48,20 @@ export interface Attribute {
   rangeMin?: number
   rangeMax?: number
   refEntity?: string
+}
+
+// Opal specific domain objects
+export interface OpalVariable {
+  table: string
+  name: string
+  label: string
+  valueType: OpalValueType
+  unit: string
+}
+
+export enum OpalValueType {
+  INTEGER = 'integer',
+  DECIMAL = 'decimal',
+  STRING = 'string',
+  TEXT = 'text'
 }
