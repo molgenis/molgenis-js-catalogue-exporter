@@ -68,3 +68,10 @@ export enum OpalValueType {
   STRING = 'string',
   TEXT = 'text'
 }
+
+export interface OpalCategory {
+  variable: string
+  name: string
+  isMissing: boolean
+  label: string
+}
