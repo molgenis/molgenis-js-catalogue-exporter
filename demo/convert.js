@@ -24,8 +24,8 @@ fs.readdir('data/sources/opal/core', (_, coreFiles) => {
       'values',
       'unit'
     ]
-    stringify(variables, { columns }, (_, data) => {
-      fs.writeFile('data/target/variables.csv', data, (__, msg) => {
+    stringify(variables, { columns, header: true }, (_, data) => {
+      fs.writeFile('data/target/cohort-catalogue_variables.csv', data, (__, msg) => {
         console.log(msg)
       })
     })

@@ -8,7 +8,7 @@ const metaAttributes: string[] = [
   'child_id',
   'age_weeks',
   'age_trimester',
-  'age_monthly',
+  'age_months',
   'age_years'
 ]
 
@@ -60,6 +60,4 @@ const getOptionStrings = (
 }
 
 const flattenOptions = (options: OpalCategory[]): string =>
-  options
-    .map(option => `${option.name.trim()} = ${option.label.trim()}`)
-    .join('\n')
+  options.map(option => `${option.name} = ${option.label}`).join('\n')
