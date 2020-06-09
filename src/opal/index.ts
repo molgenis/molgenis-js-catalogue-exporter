@@ -12,47 +12,69 @@ const metaAttributes: string[] = [
   'age_years'
 ]
 
-export const opalToCatalogue = (sheets: Dictionary<WorkSheet>): Variable[] => {
-  const variablesJson: OpalVariable[] = utils.sheet_to_json(sheets.Variables)
-  return variablesJson
+export const opalToCatalogue = (sheets: Dictionary<WorkSheet>): Variable[] =>
+  convert(
+    utils.sheet_to_json(sheets.Variables),
+    getOptionStrings(
+      sheets.Categories && utils.sheet_to_json(sheets.Categories)
+    )
+  )
+
+export const convert = (
+  variables: OpalVariable[],
+  options: Dictionary<string>
+) => {
+  return variables
     .filter(item => !metaAttributes.includes(item.name))
-    .map(convertVariable(getOptionStrings(sheets.Categories)))
+    .map(convertVariable(options))
 }
 
-const convertVariable = (options: Dictionary<string>) => (
+export const convertVariable = (options: Dictionary<string>) => (
   variable: OpalVariable
-): Variable => ({
-  tablename: variable.table.trim(),
-  variable: variable.name.trim(),
-  label: variable.label.trim(),
-  values: options[variable.name],
-  datatype: { id: convertValueType(variable.valueType) }
-})
+): Variable => {
+  const result: any = {
+    tablename: variable.table.trim(),
+    variable: variable.name.trim(),
+    label: variable.label.trim()
+  }
+  const values = options[variable.name]
+  if (values) {
+    result.values = values
+    result.datatype = { id: CatalogueDatatype.CATEGORICAL }
+  } else {
+    result.datatype = { id: convertValueType(variable.valueType) }
+  }
+  if (variable.unit) {
+    result.unit = {
+      id: variable.unit
+    }
+  }
+  return result as Variable
+}
 
-const convertValueType = (valueType: OpalValueType): CatalogueDatatype => {
+export const convertValueType = (
+  valueType: OpalValueType
+): CatalogueDatatype => {
   switch (valueType) {
     case OpalValueType.DECIMAL:
       return CatalogueDatatype.CONTINUOUS
     case OpalValueType.INTEGER:
       return CatalogueDatatype.INTEGER
     case OpalValueType.TEXT:
-      return CatalogueDatatype.CATEGORICAL
+      return CatalogueDatatype.STRING
   }
   throw new Error(`Unknown value type: ${valueType}`)
 }
 
-const getOptionStrings = (sheet: WorkSheet | undefined): Dictionary<string> => {
-  if (!sheet) {
-    return {}
-  }
-  const categoriesJson: OpalCategory[] = utils.sheet_to_json(sheet)
-  return chain(categoriesJson)
+export const getOptionStrings = (
+  categories: OpalCategory[] | undefined
+): Dictionary<string> =>
+  chain(categories)
     .groupBy(it => it.variable)
     .entries()
     .map(([variable, options]) => [variable, flattenOptions(options)])
     .fromPairs()
     .value()
-}
 
-const flattenOptions = (options: OpalCategory[]): string =>
+export const flattenOptions = (options: OpalCategory[]): string =>
   options.map(option => `${option.name} = ${option.label}`).join('\n')

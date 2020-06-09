@@ -11,7 +11,8 @@ export enum CatalogueDatatype {
   CATEGORICAL = 'categorical',
   INTEGER = 'int',
   BINARY = 'binary',
-  CONTINUOUS = 'continuous'
+  CONTINUOUS = 'continuous',
+  STRING = 'string'
 }
 
 export interface Option {
@@ -65,7 +66,6 @@ export interface OpalVariable {
 export enum OpalValueType {
   INTEGER = 'integer',
   DECIMAL = 'decimal',
-  STRING = 'string',
   TEXT = 'text'
 }
 
