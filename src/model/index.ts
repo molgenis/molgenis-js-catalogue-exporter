@@ -27,6 +27,9 @@ export interface Variable {
     id: CatalogueDatatype
   }
   values?: string
+  unit?: {
+    id: string
+  }
 }
 
 export enum MolgenisDataType {
@@ -56,7 +59,7 @@ export interface OpalVariable {
   name: string
   label: string
   valueType: OpalValueType
-  unit: string
+  unit?: string
 }
 
 export enum OpalValueType {

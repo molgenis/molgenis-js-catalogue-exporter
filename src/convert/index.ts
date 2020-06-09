@@ -1,5 +1,6 @@
 import { utils, WorkSheet } from 'xlsx'
-import type { OpalVariable, Variable, OpalValueType } from 'model'
+import type { OpalVariable, Variable, Dictionary } from '../model'
+import { CatalogueDatatype, OpalValueType } from '../model'
 
 const metaAttributes: string[] = [
   'row_id',
@@ -10,16 +11,25 @@ const metaAttributes: string[] = [
   'age_years'
 ]
 
-export const convert = (sheet: WorkSheet, tablename: string): Variable[] => {
-  const json: OpalVariable[] = utils.sheet_to_json(sheet.Sheets.Variables)
+export const convert = (sheets: Dictionary<WorkSheet>): Variable[] => {
+  const json: OpalVariable[] = utils.sheet_to_json(sheets.Variables)
   const variables = json.filter(item => !metaAttributes.includes(item.name))
-
   return variables.map(variable => ({
-    tablename,
+    tablename: variable.table,
     variable: variable.name,
     label: variable.label,
-    datatype: convertToDataType(variable.valueType)
+    datatype: { id: convertValueType(variable.valueType) }
   }))
 }
 
-const convertToDataType = (valueType: OpalValueType) => {}
+const convertValueType = (valueType: OpalValueType): CatalogueDatatype => {
+  switch (valueType) {
+    case OpalValueType.DECIMAL:
+      return CatalogueDatatype.CONTINUOUS
+    case OpalValueType.INTEGER:
+      return CatalogueDatatype.INTEGER
+    case OpalValueType.TEXT:
+      return CatalogueDatatype.CATEGORICAL
+  }
+  throw new Error(`Unknown value type: ${valueType}`)
+}

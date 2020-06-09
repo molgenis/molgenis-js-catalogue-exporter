@@ -41,12 +41,12 @@ const addCsv = async (
         header: true,
         columns
       },
-      function (err, data) {
+      function (err, csvString) {
         if (err) {
           reject(err)
         }
-        if (data) {
-          zip.file(filename, data)
+        if (csvString) {
+          zip.file(filename, csvString)
           resolve()
         }
       }
