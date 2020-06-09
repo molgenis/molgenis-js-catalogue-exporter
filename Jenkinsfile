@@ -26,7 +26,7 @@ pipeline {
             steps {
                 container('node') {
                     sh "npm install"
-                    sh "npm test"
+                    sh "npm run test:coverage"
                 }
             }
             post {
@@ -50,7 +50,7 @@ pipeline {
                 milestone 1
                 container('node') {
                     sh "npm install"
-                    sh "npm test"
+                    sh "npm run test:coverage"
                 }
             }
             post {
