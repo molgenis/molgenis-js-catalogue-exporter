@@ -77,4 +77,6 @@ export const getOptionStrings = (
     .value()
 
 export const flattenOptions = (options: OpalCategory[]): string =>
-  options.map(option => `${option.name} = ${option.label}`).join('\n')
+  options
+    .map(option => ({...option, label: option.label.replace(">=", "≥")}))
+    .map(option => `${option.name} = ${option.label}`).join('\n')
