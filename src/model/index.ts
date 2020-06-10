@@ -11,7 +11,8 @@ export enum CatalogueDatatype {
   CATEGORICAL = 'categorical',
   INTEGER = 'int',
   BINARY = 'binary',
-  CONTINUOUS = 'continuous'
+  CONTINUOUS = 'continuous',
+  STRING = 'string'
 }
 
 export interface Option {
@@ -20,12 +21,16 @@ export interface Option {
 }
 
 export interface Variable {
+  tablename?: string
   variable: string
   label: string
   datatype: {
     id: CatalogueDatatype
   }
   values?: string
+  unit?: {
+    id: string
+  }
 }
 
 export enum MolgenisDataType {
@@ -47,4 +52,26 @@ export interface Attribute {
   rangeMin?: number
   rangeMax?: number
   refEntity?: string
+}
+
+// Opal specific domain objects
+export interface OpalVariable {
+  table: string
+  name: string
+  label: string
+  valueType: OpalValueType
+  unit?: string
+}
+
+export enum OpalValueType {
+  INTEGER = 'integer',
+  DECIMAL = 'decimal',
+  TEXT = 'text'
+}
+
+export interface OpalCategory {
+  variable: string
+  name: string
+  isMissing: boolean
+  label: string
 }

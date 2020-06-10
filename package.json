@@ -24,6 +24,7 @@
     "test": "tsdx test",
     "test:coverage": "tsdx test --coverage",
     "lint": "tsdx lint",
+    "lint:fix": "tsdx lint --fix",
     "prepare": "tsdx build"
   },
   "peerDependencies": {},
@@ -61,12 +62,13 @@
   },
   "dependencies": {
     "@types/jszip": "^3.4.1",
-    "@types/node-fetch": "^2.5.7",
     "@types/lodash.groupby": "^4.6.6",
+    "@types/node-fetch": "^2.5.7",
     "csv-stringify": "^5.5.0",
     "jszip": "^3.4.0",
     "lodash.groupby": "^4.6.0",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.0",
+    "xlsx": "^0.16.2"
   },
   "release": {
     "plugins": [
