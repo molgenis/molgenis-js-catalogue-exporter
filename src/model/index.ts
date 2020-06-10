@@ -21,7 +21,7 @@ export interface Option {
 }
 
 export interface Variable {
-  tablename?: string
+  tablename: string
   variable: string
   label: string
   datatype: {

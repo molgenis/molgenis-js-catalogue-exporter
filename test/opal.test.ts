@@ -16,13 +16,15 @@ describe('convert', () => {
   it('filters out meta variables', () => {
     expect(
       convert(
-        [{
-          name: 'age_weeks',
-          label: 'Age in weeks',
-          unit: 'weeks',
-          table: 'week_rep',
-          valueType: OpalValueType.INTEGER
-        }],
+        [
+          {
+            name: 'age_weeks',
+            label: 'Age in weeks',
+            unit: 'weeks',
+            table: 'week_rep',
+            valueType: OpalValueType.INTEGER
+          }
+        ],
         {}
       )
     ).toEqual([])

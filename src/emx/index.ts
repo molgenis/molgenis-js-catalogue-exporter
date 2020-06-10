@@ -1,31 +1,27 @@
-import type { Variable, Attribute, Option, Emx, Dictionary } from '../model'
+import type { Variable, Attribute, Option, Emx } from '../model'
 import { MolgenisDataType, CatalogueDatatype } from '../model'
-import groupBy from 'lodash.groupby'
+import { chain } from 'lodash'
 
 const TABLE_NON_REPEATED = 'non_repeated'
 const TABLE_TRIMESTER_REPEATED = 'trimester_repeated'
 const TABLE_YEARLY_REPEATED = 'yearly_repeated'
-const TABLE_WEEKLY_REPEATED = 'weekly_repeated'
+// TODO: add attributes
+// const TABLE_WEEKLY_REPEATED = 'weekly_repeated'
 const TABLE_MONTHLY_REPEATED = 'monthly_repeated'
 
 export const getEmx = (variables: Variable[]): Emx => {
-  const uniqueVariables: Dictionary<Variable[]> = groupBy(
-    variables,
-    item => item.variable && attributeNameOfVariable(item.variable)
-  )
   return {
-    attributes: getAttributes(Object.values(uniqueVariables)),
-    data: Object.fromEntries(
-      Object.entries(uniqueVariables)
-        .filter(
-          ([_, values]) =>
-            values[0].datatype.id === CatalogueDatatype.CATEGORICAL
-        )
-        .map(([key, values]) => [
-          `${key}_options`,
-          getCategoricalOptions(values[0])
-        ])
-    )
+    attributes: getAttributes(variables),
+    data: chain(variables)
+      .filter(
+        variable => variable.datatype.id === CatalogueDatatype.CATEGORICAL
+      )
+      .map(variable => [
+        `${variable.variable}_options`,
+        getCategoricalOptions(variable)
+      ])
+      .fromPairs()
+      .value()
   }
 }
 
@@ -92,29 +88,23 @@ const initialAttributes: Attribute[] = [
   }
 ]
 
-const getAttributes = (variableGroups: Variable[][]): Attribute[] => {
-  const variableAttributes: Attribute[] = variableGroups.reduce(
-    (soFar: Attribute[], variables: Variable[]) => [
-      ...soFar,
-      getAttribute(variables[0], getTablename(variables.length))
-    ],
-    []
-  )
+const getAttributes = (variables: Variable[]): Attribute[] => {
+  const variableAttributes: Attribute[] = variables.map(getAttribute)
 
-  const categoricals: Variable[] = variableGroups
-    .map(it => it[0])
-    .filter(it => it.datatype.id === CatalogueDatatype.CATEGORICAL)
+  const categoricals: Variable[] = variables.filter(
+    it => it.datatype.id === CatalogueDatatype.CATEGORICAL
+  )
   const optionTableAttributes = categoricals
     .map(it => it.variable)
-    .map(attributeNameOfVariable)
-    .map(key => `${key}_options`)
+    .map(it => `${it}_options`)
     .flatMap(getOptionTableAttributes)
 
   return [...initialAttributes, ...variableAttributes, ...optionTableAttributes]
 }
 
-const getAttribute = (variable: Variable, entity: string): Attribute => {
-  const name = attributeNameOfVariable(variable.variable)
+const getAttribute = (variable: Variable): Attribute => {
+  const entity = variable.tablename
+  const name = variable.variable
   switch (variable.datatype.id) {
     case CatalogueDatatype.CATEGORICAL:
       return {
@@ -145,6 +135,13 @@ const getAttribute = (variable: Variable, entity: string): Attribute => {
         description: variable.label,
         entity
       }
+    case CatalogueDatatype.STRING:
+      return {
+        name,
+        dataType: MolgenisDataType.STRING,
+        description: variable.label,
+        entity
+      }
     default:
       throw new Error(`Unknown data type for ${name}: ${variable.datatype.id}`)
   }
@@ -165,51 +162,14 @@ const getOptionTableAttributes = (entity: string): Attribute[] => [
   }
 ]
 
-export const getTablename = (repeatCount: number) => {
-  let tableName = TABLE_NON_REPEATED
-  if (repeatCount > 100) {
-    tableName = TABLE_MONTHLY_REPEATED
-  } else if (repeatCount > 30) {
-    tableName = TABLE_WEEKLY_REPEATED
-  } else if (repeatCount > 3) {
-    tableName = TABLE_YEARLY_REPEATED
-  } else if (repeatCount > 1) {
-    tableName = TABLE_TRIMESTER_REPEATED
-  }
-  return tableName
-}
-
-const attributeNameOfVariable = (variable: string) => {
-  if (variable.indexOf('_') >= 0) {
-    return variable.substring(0, variable.lastIndexOf('_'))
-  } else {
-    return variable
-  }
-}
-
 const getCategoricalOptions = (variable: Variable): Option[] => {
   const values = variable.values
   if (!values) {
     return []
   }
-
-  let separator = '\n'
-  if (values.indexOf(separator) === -1) {
-    separator = ','
-  }
-  const options = values.split(separator).map(value => value.trim())
-
-  const matches = /[^\d\s]/.exec(options[0])
-  if (!matches) {
-    throw new Error('separator not found')
-  }
-  const optionSeparator = matches[0]
-
+  const options = values.split('\n').map(value => value.trim())
   return options.map(option => ({
-    id: parseInt(
-      option.substring(0, option.indexOf(optionSeparator)).trim(),
-      10
-    ),
-    label: option.substring(option.indexOf(optionSeparator) + 1).trim()
+    id: parseInt(option.substring(0, option.indexOf('=')), 10),
+    label: option.substring(option.indexOf('=') + 1).trim()
   }))
 }
