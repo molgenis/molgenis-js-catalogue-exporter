@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/molgenis/molgenis-js-catalogue-exporter/compare/v1.2.0...v1.3.0) (2020-06-10)
+
+
+### Features
+
+* add validation expression for the values ([65498bc](https://github.com/molgenis/molgenis-js-catalogue-exporter/commit/65498bc650f254182086e9710fd3843ebaf82ad9))
+
 # [1.2.0](https://github.com/molgenis/molgenis-js-catalogue-exporter/compare/v1.1.0...v1.2.0) (2020-06-10)
 
 
