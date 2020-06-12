@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/molgenis/molgenis-js-catalogue-exporter/compare/v1.3.0...v1.3.1) (2020-06-12)
+
+
+### Bug Fixes
+
+* forbid = in option labels ([8f2852e](https://github.com/molgenis/molgenis-js-catalogue-exporter/commit/8f2852eb354272dd5aee4ff08745375a404140d0))
+
 # [1.3.0](https://github.com/molgenis/molgenis-js-catalogue-exporter/compare/v1.2.0...v1.3.0) (2020-06-10)
 
 
