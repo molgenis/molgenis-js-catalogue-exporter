@@ -67,7 +67,7 @@
     "csv-stringify": "^5.5.0",
     "jszip": "^3.4.0",
     "lodash.groupby": "^4.6.0",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "xlsx": "^0.16.2"
   },
   "release": {
