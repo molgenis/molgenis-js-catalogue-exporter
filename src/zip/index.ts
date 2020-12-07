@@ -4,27 +4,24 @@ import type { Emx } from 'model'
 
 export const asZip = async (emx: Emx): Promise<JSZip> => {
   const zip: JSZip = new JSZip()
-  await addCsv(
-    zip,
-    [
-      'entity',
-      'name',
-      'description',
-      'dataType',
-      'labelAttribute',
-      'idAttribute',
-      'refEntity',
-      'rangeMin',
-      'rangeMax'
-    ],
-    'attributes.csv',
-    emx.attributes
-  )
-  await Promise.all(
-    Object.entries(emx.data).map(([sheet, options]) =>
-      addCsv(zip, ['id', 'label'], `${sheet}.csv`, options)
-    )
-  )
+  await Promise.all([
+    addCsv(zip,
+      ['codeList', 'value', 'label', 'order', 'isNullFlavor'],
+      'Code.csv',
+      emx.data.codes),
+    addCsv(zip,
+      ['name', 'label', 'description'], 
+      'CodeList.csv',
+      emx.data.codeLists),
+    addCsv(zip,
+      ['name', 'label', 'description', 'mandatory', 'format', 'codeList', 'topic', 'population', 'collectionEvent'], 
+      'Variable.csv',
+      emx.data.variables),
+    addCsv(zip,
+        ['name', 'label', 'order', 'parentTopic'], 
+        'Topic.csv',
+        emx.data.topics)
+  ])
   return zip
 }
 

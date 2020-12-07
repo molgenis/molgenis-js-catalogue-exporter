@@ -3,14 +3,21 @@ export interface Dictionary<T> {
 }
 
 export interface Emx {
-  attributes: Attribute[]
-  data: Dictionary<Option[]>
+  data: Dictionary<Object[]>
+}
+
+export enum LifeCycleCatalogueDatatype {
+  CATEGORICAL = 'categorical',
+  INTEGER = 'int',
+  BINARY = 'binary',
+  CONTINUOUS = 'continuous',
+  STRING = 'string'
 }
 
 export enum CatalogueDatatype {
   CATEGORICAL = 'categorical',
-  INTEGER = 'int',
-  BINARY = 'binary',
+  INTEGER = 'integer',
+  BOOLEAN = 'boolean',
   CONTINUOUS = 'continuous',
   STRING = 'string'
 }
@@ -20,12 +27,27 @@ export interface Option {
   label: string
 }
 
+export interface Code {
+  codeList: string
+  value: number
+  label: string
+  order: number
+  isNullFlavor: boolean
+}
+
+export interface CodeList {
+  name: string
+  label: string
+  description?: string
+}
+
 export interface Variable {
   tablename?: string
   variable: string
   label: string
+  comments: string
   datatype: {
-    id: CatalogueDatatype
+    id: LifeCycleCatalogueDatatype
   }
   values?: string
   unit?: {
@@ -33,45 +55,32 @@ export interface Variable {
   }
 }
 
-export enum MolgenisDataType {
-  STRING = 'string',
-  INTEGER = 'int',
-  CATEGORICAL = 'categorical',
-  BOOLEAN = 'bool',
-  DECIMAL = 'decimal'
-}
-
-export interface Attribute {
+export interface VariableData {
   name: string
-  label?: string
+  label: string
   description?: string
-  dataType: MolgenisDataType
-  entity: string
-  idAttribute?: 'TRUE' | 'FALSE' | 'AUTO'
-  labelAttribute?: 'TRUE' | 'FALSE'
-  rangeMin?: number
-  rangeMax?: number
-  refEntity?: string
-}
-
-// Opal specific domain objects
-export interface OpalVariable {
-  table: string
-  name: string
-  label: string
-  valueType: OpalValueType
+  mandatory: string
+  format: CatalogueDatatype
   unit?: string
+  codeList?: string
+  topic?: string
+  population?: string
+  collectionEvent: string
 }
 
-export enum OpalValueType {
-  INTEGER = 'integer',
-  DECIMAL = 'decimal',
-  TEXT = 'text'
+export interface Menu {
+  key: string
+  title: string
+  position: number
+  parent?: {
+    key: string
+  }
+  variables: [Variable]
 }
 
-export interface OpalCategory {
-  variable: string
+export interface Topic {
   name: string
-  isMissing: boolean
   label: string
+  order: number
+  parentTopic?: string
 }

@@ -1,185 +1,120 @@
-import type { Variable, Attribute, Option, Emx, Dictionary } from '../model'
-import { MolgenisDataType, CatalogueDatatype } from '../model'
+import { Variable, VariableData, Emx, Dictionary,
+  Code, CodeList, LifeCycleCatalogueDatatype, Menu, Topic } from '../model'
+import { CatalogueDatatype } from '../model'
 import groupBy from 'lodash.groupby'
 
-const TABLE_NON_REPEATED = 'non_repeated'
-const TABLE_TRIMESTER_REPEATED = 'trimester_repeated'
-const TABLE_YEARLY_REPEATED = 'yearly_repeated'
-const TABLE_WEEKLY_REPEATED = 'weekly_repeated'
-const TABLE_MONTHLY_REPEATED = 'monthly_repeated'
+const BASELINE = 'baseline'
+const WEEK = 'week'
+const MONTH = 'month'
+const YEAR = 'year'
+const TRIMESTER = 'trimester'
 
-export const getEmx = (variables: Variable[]): Emx => {
+export const getEmx = (variables: Variable[], menu: Menu[]): Emx => {
   const uniqueVariables: Dictionary<Variable[]> = groupBy(
     variables,
-    item => item.variable && attributeNameOfVariable(item.variable)
+    item => item.variable && deduplicatedName(item.variable)
   )
+  const variableData = getVariables(Object.values(uniqueVariables), menu)
   return {
-    attributes: getAttributes(Object.values(uniqueVariables)),
-    data: Object.fromEntries(
-      Object.entries(uniqueVariables)
-        .filter(
-          ([_, values]) =>
-            values[0].datatype.id === CatalogueDatatype.CATEGORICAL
-        )
-        .map(([key, values]) => [
-          `${key}_options`,
-          getCategoricalOptions(values[0])
-        ])
-    )
+    data: {
+      variables: variableData,
+      codes: getCodeListOptions(Object.values(uniqueVariables)),
+      codeLists: getCodeLists(Object.values(uniqueVariables)),
+      topics: getTopics(menu)
+    }
   }
 }
 
-const initialAttributes: Attribute[] = [
-  {
-    name: 'child_id',
-    dataType: MolgenisDataType.STRING,
-    entity: TABLE_NON_REPEATED,
-    idAttribute: 'TRUE'
-  },
-  {
-    name: 'id',
-    dataType: MolgenisDataType.STRING,
-    entity: TABLE_TRIMESTER_REPEATED,
-    idAttribute: 'AUTO'
-  },
-  {
-    name: 'child_id',
-    dataType: MolgenisDataType.STRING,
-    entity: TABLE_TRIMESTER_REPEATED
-  },
-  {
-    name: 'age_trimester',
-    dataType: MolgenisDataType.INTEGER,
-    entity: TABLE_TRIMESTER_REPEATED,
-    rangeMin: 1,
-    rangeMax: 3
-  },
-  {
-    name: 'id',
-    dataType: MolgenisDataType.STRING,
-    entity: TABLE_MONTHLY_REPEATED,
-    idAttribute: 'AUTO'
-  },
-  {
-    name: 'child_id',
-    dataType: MolgenisDataType.STRING,
-    entity: TABLE_MONTHLY_REPEATED
-  },
-  {
-    name: 'age_months',
-    dataType: MolgenisDataType.INTEGER,
-    entity: TABLE_MONTHLY_REPEATED,
-    rangeMin: 0,
-    rangeMax: 215
-  },
-  {
-    name: 'id',
-    dataType: MolgenisDataType.STRING,
-    entity: TABLE_YEARLY_REPEATED,
-    idAttribute: 'AUTO'
-  },
-  {
-    name: 'child_id',
-    dataType: MolgenisDataType.STRING,
-    entity: TABLE_YEARLY_REPEATED
-  },
-  {
-    name: 'age_years',
-    dataType: MolgenisDataType.INTEGER,
-    entity: TABLE_YEARLY_REPEATED,
-    rangeMin: 0,
-    rangeMax: 17
-  }
-]
+const getTopics = (menuItems: Menu[]): Topic[] => 
+  menuItems.map(item => ({
+    name: item.key,
+    label: item.title,
+    order: item.position,
+    parentTopic: item.parent && item.parent.key
+  }))
 
-const getAttributes = (variableGroups: Variable[][]): Attribute[] => {
-  const variableAttributes: Attribute[] = variableGroups.reduce(
-    (soFar: Attribute[], variables: Variable[]) => [
+const getCodeLists = (variableGroups: Variable[][]): CodeList[] => {
+  const categoricals: Variable[] = variableGroups
+  .map(it => it[0])
+  .filter(it => it.datatype.id === LifeCycleCatalogueDatatype.CATEGORICAL)
+  return categoricals.map(categorical => ({
+    name: `${deduplicatedName(categorical.variable)}_options`,
+    label: `${deduplicatedName(categorical.variable)} options`
+  }))
+}
+
+const getCodeListOptions = (variableGroups: Variable[][]): Code[] => {
+  const categoricals: Variable[] = variableGroups
+  .map(it => it[0])
+  .filter(it => it.datatype.id === LifeCycleCatalogueDatatype.CATEGORICAL)
+  return categoricals.flatMap(getVariableCodes)
+}
+
+const getTopic = (variable: Variable, menu: Menu[]) : string | undefined => {
+  const menuItem: Menu | undefined = menu.find(item => 
+    item.variables && item.variables.some(candidate =>
+      candidate.variable === variable.variable))
+  return menuItem && menuItem.key
+}
+
+const getVariables = (variableGroups: Variable[][], menu: Menu[]): VariableData[] =>
+  variableGroups.reduce(
+    (soFar: VariableData[], variables: Variable[]) => [
       ...soFar,
-      getAttribute(variables[0], getTablename(variables.length))
+      getVariableData(variables[0],
+        getCollectionEvent(variables.length),
+        getTopic(variables[0], menu))
     ],
     []
   )
 
-  const categoricals: Variable[] = variableGroups
-    .map(it => it[0])
-    .filter(it => it.datatype.id === CatalogueDatatype.CATEGORICAL)
-  const optionTableAttributes = categoricals
-    .map(it => it.variable)
-    .map(attributeNameOfVariable)
-    .map(key => `${key}_options`)
-    .flatMap(getOptionTableAttributes)
-
-  return [...initialAttributes, ...variableAttributes, ...optionTableAttributes]
-}
-
-const getAttribute = (variable: Variable, entity: string): Attribute => {
-  const name = attributeNameOfVariable(variable.variable)
-  switch (variable.datatype.id) {
-    case CatalogueDatatype.CATEGORICAL:
-      return {
-        name,
-        dataType: MolgenisDataType.CATEGORICAL,
-        description: variable.label,
-        entity,
-        refEntity: `${name}_options`
-      }
-    case CatalogueDatatype.INTEGER:
-      return {
-        name,
-        dataType: MolgenisDataType.INTEGER,
-        description: variable.label,
-        entity
-      }
-    case CatalogueDatatype.BINARY:
-      return {
-        name,
-        dataType: MolgenisDataType.BOOLEAN,
-        description: variable.label,
-        entity
-      }
-    case CatalogueDatatype.CONTINUOUS:
-      return {
-        name,
-        dataType: MolgenisDataType.DECIMAL,
-        description: variable.label,
-        entity
-      }
-    default:
-      throw new Error(`Unknown data type for ${name}: ${variable.datatype.id}`)
+const convertDataType = (from: LifeCycleCatalogueDatatype): CatalogueDatatype => {
+  switch(from) {
+    case LifeCycleCatalogueDatatype.BINARY:
+      return CatalogueDatatype.BOOLEAN
+    case LifeCycleCatalogueDatatype.CATEGORICAL:
+      return CatalogueDatatype.CATEGORICAL
+    case LifeCycleCatalogueDatatype.CONTINUOUS:
+      return CatalogueDatatype.CONTINUOUS
+    case LifeCycleCatalogueDatatype.INTEGER:
+      return CatalogueDatatype.INTEGER
+    case LifeCycleCatalogueDatatype.STRING:
+      return CatalogueDatatype.STRING
   }
 }
 
-const getOptionTableAttributes = (entity: string): Attribute[] => [
-  {
-    name: 'id',
-    dataType: MolgenisDataType.INTEGER,
-    entity,
-    idAttribute: 'TRUE'
-  },
-  {
-    name: 'label',
-    dataType: MolgenisDataType.STRING,
-    entity,
-    labelAttribute: 'TRUE'
+const getVariableData = (variable: Variable,
+    collectionEvent: string,
+    topic: string|undefined): VariableData => {
+  const name = deduplicatedName(variable.variable)
+  return {
+    name,
+    format: variable.datatype && convertDataType(variable.datatype.id),
+    label: variable.label,
+    mandatory: 'false',
+    description: variable.comments,
+    codeList: variable.datatype.id === LifeCycleCatalogueDatatype.CATEGORICAL? `${name}_options` : undefined,
+    unit: variable.unit && variable.unit.id,
+    collectionEvent,
+    topic
   }
-]
+}
 
-export const getTablename = (repeatCount: number) => {
-  let tableName = TABLE_NON_REPEATED
+export const getCollectionEvent = (repeatCount: number) => {
+  let tableName = BASELINE
   if (repeatCount > 100) {
-    tableName = TABLE_MONTHLY_REPEATED
+    tableName = MONTH
   } else if (repeatCount > 30) {
-    tableName = TABLE_WEEKLY_REPEATED
+    tableName = WEEK
   } else if (repeatCount > 3) {
-    tableName = TABLE_YEARLY_REPEATED
+    tableName = YEAR
   } else if (repeatCount > 1) {
-    tableName = TABLE_TRIMESTER_REPEATED
+    tableName = TRIMESTER
   }
   return tableName
 }
 
-const attributeNameOfVariable = (variable: string) => {
+const deduplicatedName = (variable: string) => {
   if (variable.indexOf('_') >= 0) {
     return variable.substring(0, variable.lastIndexOf('_'))
   } else {
@@ -187,7 +122,7 @@ const attributeNameOfVariable = (variable: string) => {
   }
 }
 
-const getCategoricalOptions = (variable: Variable): Option[] => {
+const getVariableCodes = (variable: Variable): Code[] => {
   const values = variable.values
   if (!values) {
     return []
@@ -205,11 +140,14 @@ const getCategoricalOptions = (variable: Variable): Option[] => {
   }
   const optionSeparator = matches[0]
 
-  return options.map(option => ({
-    id: parseInt(
+  return options.map((option, index) => ({
+    codeList: `${deduplicatedName(variable.variable)}_options`,
+    value: parseInt(
       option.substring(0, option.indexOf(optionSeparator)).trim(),
       10
     ),
-    label: option.substring(option.indexOf(optionSeparator) + 1).trim()
+    label: option.substring(option.indexOf(optionSeparator) + 1).trim(),
+    order: index,
+    isNullFlavor: false
   }))
 }
