@@ -55,6 +55,48 @@ export interface Variable {
   }
 }
 
+export enum HarmonisationStatus {
+  COMPLETE = 'complete',
+  PARTIAL = 'partial',
+  ZNA = 'zna'
+}
+
+export interface Harmonisation {
+  target: Variable
+  status: {
+    id: HarmonisationStatus
+  }
+  sources: [Variable]
+  description?: string
+  syntax?: string
+  info?: string
+  id: string
+  dateOfUpdate: string
+}
+
+export interface HarmonisationData {
+  id: string
+  target: string
+  sources: string
+  sourceIndex: number
+  targetIndex: number
+  match: HarmonisationDataMatch
+  status: HarmonisationDataStatus
+  syntax?: string
+  description?: string
+}
+
+export enum HarmonisationDataStatus {
+  DRAFT = 'draft',
+  FINAL = 'final'
+}
+
+export enum HarmonisationDataMatch {
+  COMPLETE = 'complete',
+  PARTIAL = 'partial',
+  NA = 'na'
+}
+
 export interface VariableData {
   name: string
   label: string
@@ -65,7 +107,7 @@ export interface VariableData {
   codeList?: string
   topic?: string
   population?: string
-  collectionEvent: string
+  collectionEvent?: string
 }
 
 export interface Menu {

@@ -1,9 +1,9 @@
-const exportData = require('../dist/catalogue-exporter.cjs.development')
-  .exportData
+const exportTarget = require('../dist/catalogue-exporter.cjs.development')
+  .exportTarget
 const fs = require('fs')
 
 const doExport = async (url, url2) => new Promise(async (resolve) => {
-  const emxModel = await exportData(url, url2)
+  const emxModel = await exportTarget(url, url2)
   emxModel
     .generateNodeStream({ type: 'nodebuffer', streamFiles: true })
     .pipe(fs.createWriteStream('model.zip'))

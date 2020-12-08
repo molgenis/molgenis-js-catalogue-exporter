@@ -25,6 +25,37 @@ export const asZip = async (emx: Emx): Promise<JSZip> => {
   return zip
 }
 
+export const asSourceZip = async (emx: Emx): Promise<JSZip> => {
+  const zip: JSZip = new JSZip()
+  await Promise.all([
+    addCsv(zip,
+      ['codeList', 'value', 'label', 'order', 'isNullFlavor'],
+      'Code.csv',
+      emx.data.codes),
+    addCsv(zip,
+      ['name', 'label', 'description'], 
+      'CodeList.csv',
+      emx.data.codeLists),
+    addCsv(zip,
+      ['name', 'label', 'description', 'mandatory', 'format', 'codeList', 'topic', 'population', 'collectionEvent'], 
+      'Variable.csv',
+      emx.data.variables),
+    addCsv(zip,
+        ['id',
+        'target',
+        'sources',
+        'sourceIndex',
+        'targetIndex',
+        'match',
+        'status',
+        'syntax',
+        'description'], 
+        'Harmonisation.csv',
+        emx.data.harmonisations)
+  ])
+  return zip
+}
+
 const addCsv = async (
   zip: JSZip,
   columns: string[],

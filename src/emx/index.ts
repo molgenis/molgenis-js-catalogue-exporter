@@ -1,5 +1,5 @@
 import { Variable, VariableData, Emx, Dictionary,
-  Code, CodeList, LifeCycleCatalogueDatatype, Menu, Topic } from '../model'
+  Code, CodeList, LifeCycleCatalogueDatatype, Menu, Topic, Harmonisation, HarmonisationData, HarmonisationDataMatch, HarmonisationDataStatus, HarmonisationStatus } from '../model'
 import { CatalogueDatatype } from '../model'
 import groupBy from 'lodash.groupby'
 
@@ -9,7 +9,44 @@ const MONTH = 'month'
 const YEAR = 'year'
 const TRIMESTER = 'trimester'
 
-export const getEmx = (variables: Variable[], menu: Menu[]): Emx => {
+export const getSourceEmx = (variables: Variable[], harmonisations: Harmonisation[]): Emx => {
+  const categoricals = variables.filter(it => it.datatype.id === LifeCycleCatalogueDatatype.CATEGORICAL)
+  const codes: Code[] = categoricals.flatMap(it => getVariableCodes(it, false))
+  const codeLists: CodeList[] = categoricals.map(it => it.variable)
+    .map(name => ({ name: `${name}_options`, label: `${name} options` }))
+  
+  return {
+    data: {
+      variables: variables.map(variable => getVariableData(variable, undefined, undefined, false)),
+      codes,
+      codeLists,
+      harmonisations: harmonisations.map(getHarmonisationData)
+    }
+  }
+}
+
+const getHarmonisationData = (harmonisation:Harmonisation): HarmonisationData => ({
+  id: harmonisation.id,
+  target: harmonisation.target.variable,
+  sources: harmonisation.sources && 
+    harmonisation.sources.map(source => source.variable).join(","),
+  sourceIndex: 1,
+  targetIndex: 1,
+  match: getMatch(harmonisation.status.id),
+  status: HarmonisationDataStatus.FINAL,
+  syntax: harmonisation.syntax,
+  description: harmonisation.description
+})
+
+const getMatch = (status: HarmonisationStatus): HarmonisationDataMatch => {
+  switch(status) {
+    case HarmonisationStatus.COMPLETE: return HarmonisationDataMatch.COMPLETE
+    case HarmonisationStatus.PARTIAL: return HarmonisationDataMatch.PARTIAL
+    case HarmonisationStatus.ZNA: return HarmonisationDataMatch.NA
+  }
+}
+
+export const getTargetEmx = (variables: Variable[], menu: Menu[]): Emx => {
   const uniqueVariables: Dictionary<Variable[]> = groupBy(
     variables,
     item => item.variable && deduplicatedName(item.variable)
@@ -47,7 +84,7 @@ const getCodeListOptions = (variableGroups: Variable[][]): Code[] => {
   const categoricals: Variable[] = variableGroups
   .map(it => it[0])
   .filter(it => it.datatype.id === LifeCycleCatalogueDatatype.CATEGORICAL)
-  return categoricals.flatMap(getVariableCodes)
+  return categoricals.flatMap(it => getVariableCodes(it, true))
 }
 
 const getTopic = (variable: Variable, menu: Menu[]) : string | undefined => {
@@ -63,7 +100,8 @@ const getVariables = (variableGroups: Variable[][], menu: Menu[]): VariableData[
       ...soFar,
       getVariableData(variables[0],
         getCollectionEvent(variables.length),
-        getTopic(variables[0], menu))
+        getTopic(variables[0], menu),
+        true)
     ],
     []
   )
@@ -84,16 +122,17 @@ const convertDataType = (from: LifeCycleCatalogueDatatype): CatalogueDatatype =>
 }
 
 const getVariableData = (variable: Variable,
-    collectionEvent: string,
-    topic: string|undefined): VariableData => {
-  const name = deduplicatedName(variable.variable)
+    collectionEvent: string|undefined,
+    topic: string|undefined,
+    deduplicate: boolean): VariableData => {
+  const name = deduplicate ? deduplicatedName(variable.variable) : variable.variable
   return {
     name,
     format: variable.datatype && convertDataType(variable.datatype.id),
     label: variable.label,
     mandatory: 'false',
     description: variable.comments,
-    codeList: variable.datatype.id === LifeCycleCatalogueDatatype.CATEGORICAL? `${name}_options` : undefined,
+    codeList: variable.datatype && variable.datatype.id === LifeCycleCatalogueDatatype.CATEGORICAL? `${name}_options` : undefined,
     unit: variable.unit && variable.unit.id,
     collectionEvent,
     topic
@@ -122,32 +161,31 @@ const deduplicatedName = (variable: string) => {
   }
 }
 
-const getVariableCodes = (variable: Variable): Code[] => {
+const getVariableCodes = (variable: Variable, deduplicate: boolean): Code[] => {
+  const name = deduplicate ? deduplicatedName(variable.variable) : variable.variable
   const values = variable.values
+  const result: Code[] = []
   if (!values) {
-    return []
+    return result
   }
-
-  let separator = '\n'
-  if (values.indexOf(separator) === -1) {
-    separator = ','
+  // options start with a number followed by = or )
+  const optionStart = /(\d)+\s*[=)]\s*/g
+  const split = values.trim().split(optionStart)
+  split.splice(0, 1)
+  let index = 0
+  while (split.length > 1) {
+    let [value, label] = split.splice(0, 2)
+    label = label.trim().replace(/,$/g, '').substring(0, 255)
+    if (!label) {
+      continue
+    }
+    result.push({
+      codeList: `${name}_options`,
+      value: parseInt(value, 10),
+      label,
+      order: index++,
+      isNullFlavor: false
+    })
   }
-  const options = values.split(separator).map(value => value.trim())
-
-  const matches = /[^\d\s]/.exec(options[0])
-  if (!matches) {
-    throw new Error('separator not found')
-  }
-  const optionSeparator = matches[0]
-
-  return options.map((option, index) => ({
-    codeList: `${deduplicatedName(variable.variable)}_options`,
-    value: parseInt(
-      option.substring(0, option.indexOf(optionSeparator)).trim(),
-      10
-    ),
-    label: option.substring(option.indexOf(optionSeparator) + 1).trim(),
-    order: index,
-    isNullFlavor: false
-  }))
+  return result
 }
