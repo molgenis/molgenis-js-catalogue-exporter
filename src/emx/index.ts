@@ -27,7 +27,7 @@ export const getSourceEmx = (variables: Variable[], harmonisations: Harmonisatio
 
 const getHarmonisationData = (harmonisation:Harmonisation): HarmonisationData => ({
   id: harmonisation.id,
-  target: harmonisation.target.variable,
+  target: deduplicatedName(harmonisation.target.variable),
   sources: harmonisation.sources && 
     harmonisation.sources.map(source => source.variable).join(","),
   sourceIndex: 1,
