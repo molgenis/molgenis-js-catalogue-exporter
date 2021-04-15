@@ -19,6 +19,6 @@ const doExport = async (url, url2) => {
 }
 
 doExport(
-  'https://molgenis88.gcc.rug.nl/api/v2/LifeCycle_ELFE_SourceVariables',
-  'https://molgenis88.gcc.rug.nl/api/v2/LifeCycle_ELFE_Harmonizations'
+  'https://lifecycle-acc.molgeniscloud.org/api/v2/LifeCycle_ELFE_SourceVariables',
+  'https://lifecycle-acc.molgeniscloud.org/api/v2/LifeCycle_ELFE_Harmonizations'
 ).then(() => console.log('Created elfe.zip'))

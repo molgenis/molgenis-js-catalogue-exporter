@@ -13,6 +13,6 @@ const doExport = async (url, url2) => new Promise(async (resolve) => {
 })
 
 doExport(
-  'https://molgenis88.gcc.rug.nl/api/v2/LifeCycle_CoreVariables?attrs=variable,label,datatype,unit,comments,values&num=10000',
-  'https://molgenis88.gcc.rug.nl/api/v2/UI_Menu?attrs=key,title,parent(key),position,variables(variable)&num=50'
+  'https://lifecycle-acc.molgeniscloud.org/api/v2/LifeCycle_CoreVariables?attrs=variable,label,datatype,unit,comments,values&num=10000',
+  'https://lifecycle-acc.molgeniscloud.org/api/v2/UI_Menu?attrs=key,title,parent(key),position,variables(variable)&num=50'
 ).then(() => console.log('Created model.zip'))
