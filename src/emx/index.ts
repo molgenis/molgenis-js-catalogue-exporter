@@ -153,9 +153,17 @@ export const getCollectionEvent = (repeatCount: number) => {
   return tableName
 }
 
+// Als het gedeelte achter de laatste '_' een number is dan mag het weg , anders niet 
+// foo_bar1 -> foo_bar
+// foo_bar_1 -> foo_bar
 const deduplicatedName = (variable: string) => {
   if (variable.indexOf('_') >= 0) {
-    return variable.substring(0, variable.lastIndexOf('_'))
+
+    const beforeLastUnderScore = variable.substring(0, variable.lastIndexOf('_'))
+    const afterLastUnderScore = variable.substring(variable.lastIndexOf('_'))
+    const cleaned = afterLastUnderScore.replace(/\d+/gm,"")
+    const tempResult = beforeLastUnderScore + cleaned
+    return tempResult.charAt(tempResult.length -1) === '_' ? tempResult.substring(0, tempResult.length -1) : tempResult
   } else {
     return variable
   }
