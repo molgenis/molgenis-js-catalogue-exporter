@@ -13,5 +13,5 @@ const doExport = async url => new Promise(async (resolve) => {
 })
 
 doExport(
-  'https://molgenis36.gcc.rug.nl/api/v2/LifeCycle_CoreVariables?attrs=variable,label,datatype,values&num=10000'
+  'http://localhost/api/v2/cohort-catalogue_variables?attrs=tablename,variable,label,datatype,values&num=10000'
 ).then(() => console.log('Created model.zip'))

@@ -5,6 +5,7 @@ import { Variable, CatalogueDatatype } from '../src/model'
 jest.mock('node-fetch')
 
 const variable1: Variable = {
+  tablename: 'core_nonrep',
   variable: 'variable1',
   label: 'This variable is on the first page',
   datatype: {
@@ -12,6 +13,7 @@ const variable1: Variable = {
   }
 }
 const variable2: Variable = {
+  tablename: 'core_nonrep',
   variable: 'variable2',
   label: 'This variable is on the second page',
   datatype: {
